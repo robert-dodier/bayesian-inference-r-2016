@@ -1,0 +1,80 @@
+Introduction to Bayesian Inference in R
+
+What is Bayesian inference?
+
+Bayesian inference = laws of probability applied to any proposition
+
+Proposition = statement about uncertain variables
+
+Variables = observable quantities, model parameters, latent (hidden) variables, hypotheses, etc
+
+(PERHAPS MOVE OR STRIKE THIS ASIDE)
+An aside: in "frequentist" interpretation, probability only applies to "random variables";
+for inference about any other kind of variable, one must resort to some other approach.
+This is the point of departure; everything else follows from this.
+
+Fundamental operation in Bayesian inference = computing conditional probabilities
+
+i.e. probability of an interesting proposition ...
+
+ ... given (conditional on) some data (i.e. whatever is fixed, either by observation or assumption)
+
+What about variables which don't appear on the left (interesting part) or right (given part) ??
+
+Laws of probability dictate the Right Thing To Do In Every Case.
+
+RTTDIEC = integrate joint probability of (interesting, not interesting) over (not interesting)
+
+Formally, P(I | D) = integral P(I, NI | D) wrt NI
+
+(where "integral" is a summation if NI is discrete)
+
+Special case: "Bayes' rule" P(I | D) = 
+
+Bayesian inference is a framework within which we construct a way to handle any problem involving uncertain propositions
+
+Some problems involving uncertain propositions:
+
+ * missing data
+ ** missing data in training
+ ** missing data in prediction
+ * model selection
+ * forecasts
+ * diagnosis
+ * model parameters
+ * anomaly detection 
+ * "what if" scenarios
+;; * importance of variables
+
+Reasonable, non-Bayesian approaches:
+
+ * missing data: plug in estimate of missing variable
+ * model selection: choose "the best" model
+ * forecasts: output forecast = best guess
+ * diagnosis: output diagnosis = best guess
+ * model parameters: choose best parameters
+ * anomaly detection: look for points far away from expected values
+ * "what if" scenarios: plug in example inputs into model and get output
+ 
+Approaches enriched by a Bayesian spin:
+
+ * missing data: consider all possible values of missing variable
+ * model selection: consider all possible models
+ * forecasts: consider all possible output values
+ * diagnosis: consider all possible diagnoses
+ * model parameters: consider all possible parameters
+ * anomaly detection: look for points with low probability
+ * "what if" scenarios: compute probability distribution over possible outputs
+
+A Bayesian spin on these problems:
+
+ * missing data
+ ** missing data in training = maximize integral P(missing, present | parameters) P(missing | present) wrt missing
+ ** missing data in prediction = compute integral P(output | missing, present) P(missing | present)  wrt missing
+ * model selection = 
+ * forecasts = compute P(effects | causes)
+ * diagnosis = compute P(causes | effects)
+ * finding parameters
+ * importance of variables = compute mutual information = average log(P(X, Y)/(P(X) P(Y)))
+ * "what if" scenarios = compute P(X | what-if=a), P(X | what-if=b), ...
+ * anomaly detection = find X for which P(X) is "small"

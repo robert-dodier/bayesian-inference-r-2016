@@ -78,3 +78,16 @@ A Bayesian spin on these problems:
  * importance of variables = compute mutual information = average log(P(X, Y)/(P(X) P(Y)))
  * "what if" scenarios = compute P(X | what-if=a), P(X | what-if=b), ...
  * anomaly detection = find X for which P(X) is "small"
+
+A closer look at a couple of these problems
+
+ * missing data
+ ** missing data in training = maximize integral P(missing, present | parameters) P(missing | present) wrt missing
+ ** missing data in prediction = compute integral P(output | missing, present) P(missing | present)  wrt missing
+ * model parameters
+ ** consider all possible parameters
+ ** goal is to construct posterior distribution of parameters given data
+ ** in some cases an exact distribution of parameters can be constructed exactly or approximately
+ ** in other cases, can't construct it explicitly but can construct an algorithm to sample from posterior
+ ** ... then to produce e.g. forecasts, sample from posterior and use parameters to generate output
+ ** ... and the result is a posterior distribution over the output

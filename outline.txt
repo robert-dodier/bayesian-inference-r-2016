@@ -91,3 +91,53 @@ A closer look at a couple of these problems
  ** in other cases, can't construct it explicitly but can construct an algorithm to sample from posterior
  ** ... then to produce e.g. forecasts, sample from posterior and use parameters to generate output
  ** ... and the result is a posterior distribution over the output
+
+Computing integrals -- (1) symbolic
+
+ * stuff like: `\(\int_0^x \alpha e^{-\alpha t} \beta e^{-\beta (x - t)} dt = \frac{\alpha \beta}{\beta - \alpha} \(e^{-\alpha x} - e^{-\beta x}\)\)`
+ * gives insight if assumptions are satisfied
+ * limited applicability
+ * in R, use rsympy or maybe ryacas which are glue code for computer algebra systems
+
+Computing integrals -- (2) quadrature formulas
+
+ * stats::integrate adaptive subdivision based on rules exact for nested refinements of polynomials
+ * EXAMPLE:
+ * works well in 1 dimension, tolerable in a few more
+ * unworkable in many dimensions (a common application scenario)
+
+Computing integrals -- (3) simple Monte Carlo
+
+ * runif, rnorm, rgamma, etc generate pseudorandom numbers
+ * approximate integral as average over samples
+ * EXAMPLE: 
+ * easy to apply, very general, low computational efficiency
+
+Computing integrals -- (4) Markov chain Monte Carlo
+
+ * more general than ordinary Monte Carlo
+ * if one can't explicitly construct sampling distribution,
+    construct Markov chain s.t. stationary distribution is desired distribution
+ * under some conditions, averages over time are equal to averages over space
+ * MCMC slower than ordinary MC due to autocorrelation, but more general
+
+Markov chain Monte Carlo example
+
+ * 
+Stan, a package for Bayesian inference
+
+ * R interface rstan
+ * inference via "no U-turn sampling" MCMC
+ * other capabilities -- it's a large package
+ * previous example in Stan
+
+What use is a probability?
+
+ * Rational approach is to make decision on basis of expected utility
+ ** Utility = quantify value or preference
+ ** Probability = quantify belief
+ ** Expected utility = utility integrated wrt probability distribution
+ * Instead of using a probability by itself, consider expected gain/loss
+ * e.g. P(change service) = 0.2; what should service provider do?
+ ** answer has to depend on what service provider stands to gain or lose
+

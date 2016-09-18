@@ -24,6 +24,9 @@ class: center, middle
 # Introduction to Bayesian Inference in R
 ## Robert Dodier
 
+This document and associated material is on Github:
+[robert-dodier/bayesian-inference-r-2016](https://github.com/robert-dodier/bayesian-inference-r-2016)
+
 ---
 
 # What is Bayesian inference?
@@ -198,7 +201,7 @@ class: center, middle
  * more general than ordinary Monte Carlo
 
  * if one can't explicitly construct sampling distribution,
-    construct Markov chain s.t. stationary distribution is desired distribution
+   construct Markov chain s.t. stationary distribution is desired distribution
 
  * under some conditions, averages over time are equal to averages over space
 
@@ -208,7 +211,70 @@ class: center, middle
 
 # Markov chain Monte Carlo example
 
- * 
+Given a function `L` proportional to target distribution:
+
+```r
+L1 &lt;- function (x, y) {exp(-((x - 2)^2 + 2*(y - 1)^2))}
+L2 &lt;- function (x, y) {exp(-((x - 1)^2 + 0.5*(y - 2)^2))}
+L &lt;- function (x, y) {L1(x, y) + L2(x, y)}
+```
+
+---
+
+![Function proportional to target distribution](proportional_target.svg)
+
+---
+
+Proposal distribution which is just a Gaussian bump:
+
+```r
+Q &lt;- function (x,y) {rnorm (2, mean=c(x, y), sd=0.1)}
+```
+
+Generate a new proposed point:
+
+```r
+xy1 &lt;- Q (xy0[1], xy0[2])
+```
+
+Compute acceptance ratio:
+```r
+r &lt;- L (xy1[1], xy1[2]) / L (xy0[1], xy0[2])
+```
+
+Accept or reject proposal:
+```r
+if (r &gt; 1 || r &gt; runif(1)) {xy0 &lt;- xy1}
+```
+
+---
+
+Generate a sequence of samples given a starting point `xy0`:
+
+```r
+mcmc.sequence &lt;- function (n, xy0) {
+  x &lt;- vector (length=n)
+  y &lt;- vector (length=n)
+  x[1] &lt;- xy0[1]
+  y[1] &lt;- xy0[2]
+  for (i in 2:n) {
+    xy1 &lt;- Q (xy0[1], xy0[2])
+    r &lt;- L (xy1[1], xy1[2]) / L (xy0[1], xy0[2])
+    if (r &gt; 1 || r &gt; runif(1)) {xy0 &lt;- xy1}
+    x[i] &lt;- xy0[1]
+    y[i] &lt;- xy0[2]
+  }
+  list (x=x, y=y)
+}
+```
+
+---
+
+!["Burn-in" sequence](target+initial-sequence.svg)
+
+---
+
+![Burn-in plus additional samples](target+initial+subsequent-sequence.svg)
 
 ---
 

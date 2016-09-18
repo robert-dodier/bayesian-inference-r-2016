@@ -1,143 +1,267 @@
-Introduction to Bayesian Inference in R
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Introduction to Bayesian Inference in R</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
 
-What is Bayesian inference?
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
 
-Bayesian inference = laws of probability applied to any proposition
+class: center, middle
 
-Proposition = statement about uncertain variables
+# Introduction to Bayesian Inference in R
+## Robert Dodier
 
-Variables = observable quantities, model parameters, latent (hidden) variables, hypotheses, etc
+---
 
-(PERHAPS MOVE OR STRIKE THIS ASIDE)
-An aside: in "frequentist" interpretation, probability only applies to "random variables";
-for inference about any other kind of variable, one must resort to some other approach.
-This is the point of departure; everything else follows from this.
+# What is Bayesian inference?
 
-Fundamental operation in Bayesian inference = computing conditional probabilities
+ * Bayesian inference = laws of probability applied to any proposition
 
-i.e. probability of an interesting proposition ...
+ * Proposition = statement about uncertain variables
 
- ... given (conditional on) some data (i.e. whatever is fixed, either by observation or assumption)
+ * Variables = observable quantities, model parameters, latent (hidden) variables, hypotheses, etc
 
-What about variables which don't appear on the left (interesting part) or right (given part) ??
+ * Fundamental operation in Bayesian inference = computing conditional probabilities
 
-Laws of probability dictate the Right Thing To Do In Every Case.
+ * i.e. probability of an interesting proposition ...
 
-RTTDIEC = integrate joint probability of (interesting, not interesting) over (not interesting)
+ *  ... given (conditional on) some data (i.e. whatever is fixed, either by observation or assumption)
 
-Formally, P(I | D) = integral P(I, NI | D) wrt NI
+ * What about variables which don't appear on the left (interesting part) or right (given part) ??
 
-(where "integral" is a summation if NI is discrete)
+ * Laws of probability dictate the Right Thing To Do In Every Case.
 
-Special case: "Bayes' rule" P(I | D) = 
+ * RTTDIEC = integrate joint probability of (interesting, not interesting) over (not interesting)
 
-Bayesian inference is a framework within which we construct a way to handle any problem involving uncertain propositions
+ * Formally, P(I | D) = integral P(I, NI | D) wrt NI
+ (where "integral" is a summation if NI is discrete)
 
-Some problems involving uncertain propositions:
+ * Special case: "Bayes' rule" P(I | D) = 
+
+ * Bayesian inference is a framework within which we construct a way to handle any problem involving uncertain propositions
+
+---
+
+# Some problems involving uncertain propositions
 
  * missing data
- ** missing data in training
- ** missing data in prediction
- * model selection
- * forecasts
- * diagnosis
- * model parameters
- * anomaly detection 
- * "what if" scenarios
-;; * importance of variables
 
-Reasonable, non-Bayesian approaches:
+ * model selection
+
+ * forecasts
+
+ * diagnosis
+
+ * model parameters
+
+ * anomaly detection 
+
+ * "what if" scenarios
+
+---
+
+# Reasonable, non-Bayesian approaches
 
  * missing data: plug in estimate of missing variable
+
  * model selection: choose "the best" model
+
  * forecasts: output forecast = best guess
+
  * diagnosis: output diagnosis = best guess
+
  * model parameters: choose best parameters
+
  * anomaly detection: look for points far away from expected values
+
  * "what if" scenarios: plug in example inputs into model and get output
  
-Approaches enriched by a Bayesian spin:
+---
+
+# Approaches enriched by a Bayesian spin:
 
  * missing data: consider all possible values of missing variable
+
  * model selection: consider all possible models
+
  * forecasts: consider all possible output values
+
  * diagnosis: consider all possible diagnoses
+
  * model parameters: consider all possible parameters
+
  * anomaly detection: look for points with low probability
+
  * "what if" scenarios: compute probability distribution over possible outputs
 
-A Bayesian spin on these problems:
+---
+
+# A Bayesian spin on these problems
 
  * missing data
- ** missing data in training = maximize integral P(missing, present | parameters) P(missing | present) wrt missing
- ** missing data in prediction = compute integral P(output | missing, present) P(missing | present)  wrt missing
+
+  * missing data in training = maximize integral P(missing, present | parameters) P(missing | present) wrt missing
+
+  * missing data in prediction = compute integral P(output | missing, present) P(missing | present)  wrt missing
+
  * model selection = 
+
  * forecasts = compute P(effects | causes)
+
  * diagnosis = compute P(causes | effects)
+
  * finding parameters
+
  * importance of variables = compute mutual information = average log(P(X, Y)/(P(X) P(Y)))
+
  * "what if" scenarios = compute P(X | what-if=a), P(X | what-if=b), ...
+
  * anomaly detection = find X for which P(X) is "small"
 
-A closer look at a couple of these problems
+---
+
+# A closer look at a couple of these problems
 
  * missing data
- ** missing data in training = maximize integral P(missing, present | parameters) P(missing | present) wrt missing
- ** missing data in prediction = compute integral P(output | missing, present) P(missing | present)  wrt missing
- * model parameters
- ** consider all possible parameters
- ** goal is to construct posterior distribution of parameters given data
- ** in some cases an exact distribution of parameters can be constructed exactly or approximately
- ** in other cases, can't construct it explicitly but can construct an algorithm to sample from posterior
- ** ... then to produce e.g. forecasts, sample from posterior and use parameters to generate output
- ** ... and the result is a posterior distribution over the output
 
-Computing integrals -- (1) symbolic
+  * missing data in training = maximize integral P(missing, present | parameters) P(missing | present) wrt missing
+
+  * missing data in prediction = compute integral P(output | missing, present) P(missing | present)  wrt missing
+
+ * model parameters
+
+  * consider all possible parameters
+
+  * goal is to construct posterior distribution of parameters given data
+
+  * in some cases an exact distribution of parameters can be constructed exactly or approximately
+
+  * in other cases, can't construct it explicitly but can construct an algorithm to sample from posterior
+
+  * ... then to produce e.g. forecasts, sample from posterior and use parameters to generate output
+
+  * ... and the result is a posterior distribution over the output
+
+---
+
+# Computing integrals -- (1) symbolic
 
  * stuff like: `\(\int_0^x \alpha e^{-\alpha t} \beta e^{-\beta (x - t)} dt = \frac{\alpha \beta}{\beta - \alpha} \(e^{-\alpha x} - e^{-\beta x}\)\)`
+
  * gives insight if assumptions are satisfied
+
  * limited applicability
+
  * in R, use rsympy or maybe ryacas which are glue code for computer algebra systems
 
-Computing integrals -- (2) quadrature formulas
+---
+
+# Computing integrals -- (2) quadrature formulas
 
  * stats::integrate adaptive subdivision based on rules exact for nested refinements of polynomials
+
  * EXAMPLE:
+
  * works well in 1 dimension, tolerable in a few more
+
  * unworkable in many dimensions (a common application scenario)
 
-Computing integrals -- (3) simple Monte Carlo
+---
+
+# Computing integrals -- (3) simple Monte Carlo
 
  * runif, rnorm, rgamma, etc generate pseudorandom numbers
+
  * approximate integral as average over samples
+
  * EXAMPLE: 
+
  * easy to apply, very general, low computational efficiency
 
-Computing integrals -- (4) Markov chain Monte Carlo
+---
+
+# Computing integrals -- (4) Markov chain Monte Carlo
 
  * more general than ordinary Monte Carlo
+
  * if one can't explicitly construct sampling distribution,
     construct Markov chain s.t. stationary distribution is desired distribution
+
  * under some conditions, averages over time are equal to averages over space
+
  * MCMC slower than ordinary MC due to autocorrelation, but more general
 
-Markov chain Monte Carlo example
+---
+
+# Markov chain Monte Carlo example
 
  * 
-Stan, a package for Bayesian inference
+
+---
+
+# Stan, a package for Bayesian inference
 
  * R interface rstan
+
  * inference via "no U-turn sampling" MCMC
+
  * other capabilities -- it's a large package
+
  * previous example in Stan
 
-What use is a probability?
+---
+
+# What use is a probability?
 
  * Rational approach is to make decision on basis of expected utility
- ** Utility = quantify value or preference
- ** Probability = quantify belief
- ** Expected utility = utility integrated wrt probability distribution
- * Instead of using a probability by itself, consider expected gain/loss
- * e.g. P(change service) = 0.2; what should service provider do?
- ** answer has to depend on what service provider stands to gain or lose
 
+  * Utility = quantify value or preference
+
+  * Probability = quantify belief
+
+  * Expected utility = utility integrated wrt probability distribution
+
+ * Instead of using a probability by itself, consider expected gain/loss
+
+ * e.g. P(change service) = 0.2; what should service provider do?
+
+  * answer has to depend on what service provider stands to gain or lose
+
+    </textarea>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js"></script>
+    <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML&delayStartupUntil=configured" type="text/javascript"></script>
+    <script type="text/javascript">
+      var slideshow = remark.create();
+
+      // Setup MathJax
+      MathJax.Hub.Config({
+          tex2jax: {
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+      });
+      MathJax.Hub.Queue(function() {
+          $(MathJax.Hub.getAllJax()).map(function(index, elem) {
+              return(elem.SourceElement());
+          }).parent().addClass('has-jax');
+      });
+
+      MathJax.Hub.Configured();
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>

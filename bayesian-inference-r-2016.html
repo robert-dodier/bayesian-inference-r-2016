@@ -37,138 +37,123 @@ This document and associated material is on Github:
 
  * Variables = observable quantities, model parameters, latent (hidden) variables, hypotheses, etc
 
- * Fundamental operation in Bayesian inference = computing conditional probabilities
+ * Fundamental operation is to compute conditional probabilities
 
  * i.e. probability of an interesting proposition ...
 
- *  ... given (conditional on) some data (i.e. whatever is fixed, either by observation or assumption)
-
- * What about variables which don't appear on the left (interesting part) or right (given part) ??
-
- * Laws of probability dictate the Right Thing To Do In Every Case.
-
- * RTTDIEC = integrate joint probability of (interesting, not interesting) over (not interesting)
-
- * Formally, P(I | D) = integral P(I, NI | D) wrt NI
- (where "integral" is a summation if NI is discrete)
-
- * Special case: "Bayes' rule" P(I | D) = 
+  *  given (conditional on) some data (i.e. whatever is fixed, either by observation or assumption)
 
  * Bayesian inference is a framework within which we construct a way to handle any problem involving uncertain propositions
+
+ * Historical note: not clear that Thomas Bayes was a Bayesian
+
+---
+
+# What to do about uninteresting variables
+
+ * What about variables which are neither interesting nor given??
+
+ * Laws of probability dictate the Right Thing To Do:
+
+  * namely, integrate joint probability of (interesting, not interesting) over (not interesting)
+
+  * formally,
+ 
+`\(P(\mathrm{interesting} | \mathrm{given}) = \int P(\mathrm{interesting}, \mathrm{uninteresting} | \mathrm{given}) d\mathrm{uninteresting}\)`
+
+  * (where integral is a summation if uninteresting is discrete)
+ 
+ * This is the motivation for the computational stuff we'll see later
 
 ---
 
 # Some problems involving uncertain propositions
 
- * missing data
+ * Missing data
 
- * model selection
+ * Forecasts
 
- * forecasts
+ * Diagnosis
 
- * diagnosis
+ * Model selection
 
- * model parameters
+ * Model parameters
 
- * anomaly detection 
-
- * "what if" scenarios
+ * "What if" scenarios
 
 ---
 
 # Reasonable, non-Bayesian approaches
 
- * missing data: plug in estimate of missing variable
+ * Missing data: plug in estimate of missing variable
 
- * model selection: choose "the best" model
+ * Forecasts: output forecast = best guess
 
- * forecasts: output forecast = best guess
+ * Diagnosis: output diagnosis = best guess
 
- * diagnosis: output diagnosis = best guess
+ * Model selection: choose "the best" model
 
- * model parameters: choose best parameters
+ * Model parameters: choose best parameters
 
- * anomaly detection: look for points far away from expected values
-
- * "what if" scenarios: plug in example inputs into model and get output
+ * "What if" scenarios: plug in example inputs into model and get output
  
 ---
 
-# Approaches enriched by a Bayesian spin:
+# Approaches as enriched by a Bayesian perspective
 
- * missing data: consider all possible values of missing variable
+ * Missing data: consider all possible values of missing variable
 
- * model selection: consider all possible models
+ * Forecasts: consider all possible output values
 
- * forecasts: consider all possible output values
+ * Diagnosis: consider all possible diagnoses
 
- * diagnosis: consider all possible diagnoses
+ * Model selection: consider all possible models
 
- * model parameters: consider all possible parameters
+ * Model parameters: consider all possible parameters
 
- * anomaly detection: look for points with low probability
-
- * "what if" scenarios: compute probability distribution over possible outputs
+ * "What if" scenarios: consider all possible results
 
 ---
 
-# A Bayesian spin on these problems
+# A closer look at the model parameters problem
 
- * missing data
+ * Goal is to construct posterior distribution of parameters given data
 
-  * missing data in training = maximize integral P(missing, present | parameters) P(missing | present) wrt missing
+ * In some cases an exact distribution of parameters can be constructed exactly or approximately
 
-  * missing data in prediction = compute integral P(output | missing, present) P(missing | present)  wrt missing
+ * In other cases, can't construct it explicitly but can construct an algorithm to sample from posterior
 
- * model selection = 
+ * ... then to produce e.g. forecasts, sample from posterior and use parameters to generate output
 
- * forecasts = compute P(effects | causes)
-
- * diagnosis = compute P(causes | effects)
-
- * finding parameters
-
- * importance of variables = compute mutual information = average log(P(X, Y)/(P(X) P(Y)))
-
- * "what if" scenarios = compute P(X | what-if=a), P(X | what-if=b), ...
-
- * anomaly detection = find X for which P(X) is "small"
+ * ... and the result is a posterior distribution over the output
 
 ---
 
-# A closer look at a couple of these problems
+# Example problem: linear model with two free parameters
 
- * missing data
+ * Model is `\(y = \alpha_0 + \alpha_1 x + \epsilon\)` with `\(\epsilon \sim N(0, \sigma_{\epsilon}^2\)`
 
-  * missing data in training = maximize integral P(missing, present | parameters) P(missing | present) wrt missing
+ * Given data: `\((0.4, 1.2), (0.6, 0.8), (1.3, 1.5)\)`
 
-  * missing data in prediction = compute integral P(output | missing, present) P(missing | present)  wrt missing
+ * Prior information about parameters: `\(p(\alpha_0) = \alpha_0 e^{-\alpha_0}, p(\alpha_1) = \alpha_1 e^{-\alpha_1}\)`
 
- * model parameters
+ * Likelihood function: `\(L(\alpha_0, \alpha_1) = p(\mathrm{data} | \alpha_0, \alpha_1) = \prod_{i=1}^3 p_{\epsilon}(y_i - (\alpha_0 + \alpha_1 x_i))\)`
 
-  * consider all possible parameters
+ * Forecast: for a given `\(x\)`, what is `\(p(y | x, \mathrm{data})\)` ??
 
-  * goal is to construct posterior distribution of parameters given data
-
-  * in some cases an exact distribution of parameters can be constructed exactly or approximately
-
-  * in other cases, can't construct it explicitly but can construct an algorithm to sample from posterior
-
-  * ... then to produce e.g. forecasts, sample from posterior and use parameters to generate output
-
-  * ... and the result is a posterior distribution over the output
+ * `\(p(y | x, \mathrm{data}) = \int \int p(y | x, \alpha_0, \alpha_1) p(\alpha_0, \alpha_1 | \mathrm{data}) d\alpha_0 d\alpha_1\)`
 
 ---
 
 # Computing integrals -- (1) symbolic
 
- * stuff like: `\(\int_0^x \alpha e^{-\alpha t} \beta e^{-\beta (x - t)} dt = \frac{\alpha \beta}{\beta - \alpha} \(e^{-\alpha x} - e^{-\beta x}\)\)`
+ * Stuff like: `\(\int_0^x \alpha e^{-\alpha t} \beta e^{-\beta (x - t)} dt = \frac{\alpha \beta}{\beta - \alpha} \(e^{-\alpha x} - e^{-\beta x}\)\)`
 
- * gives insight if assumptions are satisfied
+ * Gives insight if assumptions are satisfied
 
- * limited applicability
+ * Limited applicability
 
- * in R, use rsympy or maybe ryacas which are glue code for computer algebra systems
+ * In R, use rsympy or maybe ryacas which are glue code for computer algebra systems
 
 ---
 
@@ -178,9 +163,9 @@ This document and associated material is on Github:
 
  * EXAMPLE:
 
- * works well in 1 dimension, tolerable in a few more
+ * Works well in 1 dimension, tolerable in a few more
 
- * unworkable in many dimensions (a common application scenario)
+ * Unworkable in many dimensions (a common application scenario)
 
 ---
 
@@ -188,22 +173,22 @@ This document and associated material is on Github:
 
  * runif, rnorm, rgamma, etc generate pseudorandom numbers
 
- * approximate integral as average over samples
+ * Approximate integral as average over samples
 
  * EXAMPLE: 
 
- * easy to apply, very general, low computational efficiency
+ * Easy to apply, very general, low computational efficiency
 
 ---
 
 # Computing integrals -- (4) Markov chain Monte Carlo
 
- * more general than ordinary Monte Carlo
+ * More general than ordinary Monte Carlo
 
- * if one can't explicitly construct sampling distribution,
+ * If one can't explicitly construct sampling distribution,
    construct Markov chain s.t. stationary distribution is desired distribution
 
- * under some conditions, averages over time are equal to averages over space
+ * Under some conditions, averages over time are equal to averages over space
 
  * MCMC slower than ordinary MC due to autocorrelation, but more general
 

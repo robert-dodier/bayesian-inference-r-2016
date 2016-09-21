@@ -129,6 +129,16 @@ This document and associated material is on Github:
 
 # Linear regression example
 
+ * We have a small data sample
+
+ * We'll assume the data are described by a linear model `\(y = a_0 + a_1 x + \mathrm{noise}\)`
+
+ * We'd like to compute a forecast at a given point
+
+ * ... taking uncertainty in the model parameters into account
+
+---
+
 ![Example data for linear regression problem with no title](data.svg)
 
 ---
@@ -145,17 +155,19 @@ This document and associated material is on Github:
 
 ---
 
-There are many possible lines which could describe the data, some more plausible, some less
+There are many possible lines, some more plausible, some less
 
 ![Example data with possible lines](data+random-lines.svg)
 
 ---
 
- * Let's set our goal to compute the posterior distribution `\(p(y | x, \mathrm{data})\)`.
+ Let's set our goal to compute the posterior distribution `\(p(y | x, \mathrm{data})\)`
 
  * For that, we need to average over the variables we don't know, namely `\(a_0\)` and `\(a_1\)`.
 
- * Specifically we need to compute `\(\int \int p(y | x, a_0, a_1) p(a_0, a_1 | \mathrm{data}) p(a_0, a_1) da_0 da_1\)`
+ * Specifically we need to compute
+ 
+ `\(\int \int p(y | x, a_0, a_1) p(a_0, a_1 | \mathrm{data}) p(a_0, a_1) da_0 da_1\)`
 
 ---
 
@@ -369,8 +381,6 @@ Running the chain longer yields more representative samples
 
 ---
 
-Posterior distribution of y given x=0.75 via Markov chain Monte Carlo
-
 ![Posterior distribution of y given x=0.75 via Markov chain Monte Carlo](y-given-x-via-mcmc.svg)
 
 ---
@@ -435,8 +445,6 @@ Samples from the Markov chain for the parameters
 ![Samples from the Markov chain for the parameters](stan-model-posterior-samples.svg)
 
 ---
-
-Posterior distribution of y given x=0.75
 
 ![Posterior distribution of y given x=0.75](y-given-x-via-stan.svg)
 

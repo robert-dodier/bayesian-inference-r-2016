@@ -32,9 +32,20 @@ sapply (yy, function (y) {py.given.x (y, 0.75) $ value}) -> pp
 I <- sum(pp)*0.01
 pp <- pp/I
 
-svg ("y-given-x-via-integrate.svg")
+svg ("y-given-x-via-quadrature.svg")
 plot (x=yy, y=pp, type="l", xlab="", ylab="")
-title (main="Density of y|x", xlab="y", ylab="density")
+title (main="Density of y|x via quadrature", xlab="y", ylab="density")
+dev.off ()
+
+py.given.x.via.monte.carlo <-
+  function (y, x) {mean (mapply (function (a.0, a.1) {py.given.x.a0.a1.sigma.e (y, x, a.0, a.1, 0.25) * L(a.0, a.1, 0.25) * psigma.e(0.25)}, rnorm (1000, mean=0, sd=1), rgamma (1000, shape=2, scale=1)))}
+pp <- sapply (yy, function (y) {py.given.x.via.monte.carlo (y, 0.75)})
+I <- sum(pp)*0.01
+pp <- pp/I
+
+svg ("y-given-x-via-monte-carlo.svg")
+plot (x=yy, y=pp, type="l", xlab="", ylab="")
+title (main="Density of y|x via simple Monte Carlo", xlab="y", ylab="density")
 dev.off ()
 
 a.0 <- seq (-1, 1, length=100)
@@ -90,8 +101,8 @@ dev.off ()
 x <- 0.75
 y <- vector (length=10000)
 for (i in 1:10000) {y[i] <- a.subsequent$x[i] + a.subsequent$y[i]*x}
-svg ("y-histogram.svg")
-hist (y, freq=F)
+svg ("y-given-x-via-mcmc.svg")
+hist (y, freq=F, main="Density of y|x via Markov chain Monte Carlo")
 dev.off ()
 
 svg ("data-title-peak-demand.svg")

@@ -45,8 +45,6 @@ This document and associated material is on Github:
 
  * Bayesian inference is a framework within which we construct a way to handle any problem involving uncertain propositions
 
- * Historical note: not clear that Thomas Bayes was a Bayesian
-
 ---
 
 # What to do about uninteresting variables
@@ -55,13 +53,13 @@ This document and associated material is on Github:
 
  * Laws of probability dictate the Right Thing To Do:
 
-  * namely, integrate joint probability of (interesting, not interesting) over (not interesting)
+  * namely, integrate joint probability of "interesting" and "not interesting" over "not interesting"
 
   * formally,
  
 `\(P(\mathrm{interesting} | \mathrm{given}) = \int P(\mathrm{interesting}, \mathrm{uninteresting} | \mathrm{given}) d\mathrm{uninteresting}\)`
 
-  * (where integral is a summation if uninteresting is discrete)
+  (where integral is a summation if uninteresting is discrete)
  
  * This is the motivation for the computational stuff we'll see later
 
@@ -147,45 +145,29 @@ This document and associated material is on Github:
 
 ---
 
-# Example problem: linear model with two free parameters
-
- * Model is `\(y = \alpha_0 + \alpha_1 x + \epsilon\)` with `\(\epsilon \sim N(0, \sigma_{\epsilon}^2\)`
-
- * Given data: `\((0.4, 1.2), (0.6, 0.8), (1.3, 1.5)\)`
-
- * Prior information about parameters: `\(p(\alpha_0) = \alpha_0 e^{-\alpha_0}, p(\alpha_1) = \alpha_1 e^{-\alpha_1}\)`
-
- * Likelihood function: `\(L(\alpha_0, \alpha_1) = p(\mathrm{data} | \alpha_0, \alpha_1) = \prod_{i=1}^3 p_{\epsilon}(y_i - (\alpha_0 + \alpha_1 x_i))\)`
-
- * Forecast: for a given `\(x\)`, what is `\(p(y | x, \mathrm{data})\)` ??
-
- * `\(p(y | x, \mathrm{data}) = \int \int p(y | x, \alpha_0, \alpha_1) p(\alpha_0, \alpha_1 | \mathrm{data}) d\alpha_0 d\alpha_1\)`
-
----
-
 There are many possible lines which could describe the data, some more plausible, some less
 
 ![Example data with possible lines](data+random-lines.svg)
 
 ---
 
- * Let's set our goal to compute the posterior distribution `\(p(y | x, \mathrm{data})\)\`.
+ * Let's set our goal to compute the posterior distribution `\(p(y | x, \mathrm{data})\)`.
 
  * For that, we need to average over the variables we don't know, namely `\(a_0\)` and `\(a_1\)`.
 
- * Specifically we need to compute `\(\int p(y | x, a_0, a_1) p(a_0 | \mathrm{data}) p(a_0, a_1) da_0 da_1\)`
+ * Specifically we need to compute `\(\int \int p(y | x, a_0, a_1) p(a_0, a_1 | \mathrm{data}) p(a_0, a_1) da_0 da_1\)`
 
 ---
 
 # Computing integrals -- (1) symbolic
 
- * Stuff like: `\(\int_0^x \alpha e^{-\alpha t} \beta e^{-\beta (x - t)} dt = \frac{\alpha \beta}{\beta - \alpha} \(e^{-\alpha x} - e^{-\beta x}\)\)`
+ * Stuff like: `\(\int_0^x \alpha e^{-\alpha t} \beta e^{-\beta (x - t)} dt = \frac{\alpha \beta}{\beta - \alpha} (e^{-\alpha x} - e^{-\beta x})\)`
 
  * Gives insight if assumptions are satisfied
 
  * Limited applicability
 
- * In R, use rsympy or maybe ryacas which are glue code for computer algebra systems
+ * In R, maybe rsympy or maybe ryacas which are glue code for computer algebra systems
 
 ---
 
@@ -196,6 +178,8 @@ There are many possible lines which could describe the data, some more plausible
 ---
 
 # Linear regression example using quadrature
+
+`py.given.x` computes `\(p(y|x, \mathrm{data})\)`
 
 ```r
 py.given.x &lt;-
@@ -211,6 +195,8 @@ py.given.x &lt;-
       0, Inf)}
 ```
 
+Integrand is `\(p(y | x, a_0, a_1) p(a_0, a_1 | \mathrm{data}) p(a_0, a_1)\)`
+
 ---
 
 # Calculating a posterior distribution via quadrature
@@ -223,6 +209,8 @@ pp &lt;- pp/I
 
 plot (x=yy, y=pp, type="l")
 ```
+
+---
 
 ![Posterior distribution of y given 0.75 via quadrature](y-given-x-via-quadrature.svg)
 
@@ -248,10 +236,16 @@ plot (x=yy, y=pp, type="l")
 
 ```r
 py.given.x.via.monte.carlo &lt;-
-  function (y, x) {mean (mapply (function (a.0, a.1) {py.given.x.a0.a1.sigma.e (y, x, a.0, a.1, 0.25) * L(a.0, a.1, 0.25) * psigma.e(0.25)}, rnorm (1000, mean=0, sd=1), rgamma (1000, shape=2, scale=1)))}
+  function (y, x) {
+    mean (mapply (function (a.0, a.1) {
+                      py.given.x.a0.a1.sigma.e (y, x, a.0, a.1, 0.25) *
+                      L(a.0, a.1, 0.25) *
+                      psigma.e(0.25)},
+                    rnorm (1000, mean=0, sd=1),
+                    rgamma (1000, shape=2, scale=1)))}
 ```
 
-----
+---
 
 # Calculating a posterior distribution via simple Monte Carlo
 
@@ -260,6 +254,8 @@ pp &lt;- sapply (yy, function (y) {py.given.x.via.monte.carlo (y, 0.75)})
 I &lt;- sum(pp)*0.01
 pp &lt;- pp/I
 ```
+
+---
 
 ![Posterior distribution of y given x=0.75 via simple Monte Carlo](y-given-x-via-monte-carlo.svg)
 
@@ -282,21 +278,35 @@ pp &lt;- pp/I
  * If one can't explicitly construct sampling distribution,
    construct Markov chain s.t. stationary distribution is desired distribution
 
- * Under some conditions, averages over time are equal to averages over space
+ * For this Markov chain, averages over samples are equal to averages over the desired distribution
+
+ * From current sample, jump somewhere else; maybe accept the new sample. Repeat many times.
 
 ---
 
 # Markov chain Monte Carlo example
 
-We'll work with a function proportional to the distribution we want to sample.
+We'll work with a function proportional to the distribution we want to sample;
 
-This is the "likelihood" function for the linear regression example.
+namely the product of the likelihood function and the prior for the parameters.
+
+Here is the likelihood function for the linear regression example:
 
 ```r
-L &lt;- function (a.0, a.1, sigma.e) {py.given.x.a0.a1.sigma.e (data.y[1], data.x[1], a.0, a.1, sigma.e) * 
-                                   py.given.x.a0.a1.sigma.e (data.y[2], data.x[2], a.0, a.1, sigma.e) * 
-                                   py.given.x.a0.a1.sigma.e (data.y[3], data.x[3], a.0, a.1, sigma.e)}
+L &lt;- function (a.0, a.1, sigma.e) {
+          py.given.x.a0.a1.sigma.e (data.y[1], data.x[1], a.0, a.1, sigma.e) * 
+          py.given.x.a0.a1.sigma.e (data.y[2], data.x[2], a.0, a.1, sigma.e) * 
+          py.given.x.a0.a1.sigma.e (data.y[3], data.x[3], a.0, a.1, sigma.e)}
 ```
+
+and here is the prior:
+
+```r
+pa.0 &lt;- function (a.0) {exp(-0.5*a.0^2)/sqrt(2*pi)}
+pa.1 &lt;- function (a.1) {a.1*exp(-a.1)}
+```
+
+---
 
 ![Function proportional to target distribution](proportional_target.svg)
 
@@ -336,7 +346,7 @@ mcmc.sequence &lt;- function (n, p0) {
   a.1[1] &lt;- p0[2]
   for (i in 2:n) {
     p1 &lt;- Q (p0[1], p0[2])
-    r &lt;- L2 (p1[1], p1[2]) / L2 (p0[1], p0[2])
+    r &lt;- L (p1[1], p1[2]) / L (p0[1], p0[2])
     if (r &gt; 1 || r &gt; runif(1)) {p0 &lt;- p1}
     a.0[i] &lt;- p0[1]
     a.1[i] &lt;- p0[2]
@@ -359,7 +369,7 @@ Running the chain longer yields more representative samples
 
 ---
 
-# Posterior distribution of y given x=0.75 via Markov chain Monte Carlo
+Posterior distribution of y given x=0.75 via Markov chain Monte Carlo
 
 ![Posterior distribution of y given x=0.75 via Markov chain Monte Carlo](y-given-x-via-mcmc.svg)
 
@@ -420,19 +430,21 @@ hist (y_pred, freq=F, main="Density of y|x via Stan")
 
 ---
 
-# Samples from the Markov chain for the parameters
+Samples from the Markov chain for the parameters
 
 ![Samples from the Markov chain for the parameters](stan-model-posterior-samples.svg)
 
 ---
 
-# Posterior distribution of y given x=0.75
+Posterior distribution of y given x=0.75
 
 ![Posterior distribution of y given x=0.75](y-given-x-via-stan.svg)
 
 ---
 
 # What use is a probability?
+
+ * Probability calculations are part of a bigger picture of decision analysis
 
  * Rational approach is to make decision on basis of expected utility
 

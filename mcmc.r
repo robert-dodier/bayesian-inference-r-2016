@@ -71,3 +71,22 @@ for (i in 1:10000) {y[i] <- a.subsequent$x[i] + a.subsequent$y[i]*x}
 svg ("y-histogram.svg")
 hist (y, freq=F)
 dev.off ()
+
+svg ("data-title-peak-demand.svg")
+plot (c(0, 1), c(0, 2), type="n", xlab="", ylab="")
+points (x=data.x, y=data.y, col="black", pch=19)
+title (main="Portland metro area peak demand", xlab="Years", ylab="GW")
+dev.off ()
+
+svg ("data-title-drought.svg")
+plot (c(0, 1), c(0, 2), type="n", xlab="", ylab="")
+points (x=data.x, y=data.y, col="black", pch=19)
+title (main="Drought in the Western United States", xlab="Atmospheric CO2", ylab="Recurrence period")
+dev.off ()
+
+svg ("data-title-surgery-cost.svg")
+plot (c(0, 1), c(0, 2), type="n", xlab="", ylab="")
+points (x=data.x, y=data.y, col="black", pch=19)
+title (main="Cost of kidney surgery", xlab="Total cost, in 2016 dollars", ylab="Probability of recovery")
+dev.off ()
+

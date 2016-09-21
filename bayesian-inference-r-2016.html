@@ -129,6 +129,24 @@ This document and associated material is on Github:
 
 ---
 
+# Linear regression example
+
+![Example data for linear regression problem with no title](data.svg)
+
+---
+
+![Example data with drought title](data-title-drought.svg)
+
+---
+
+![Example data with surgery title](data-title-surgery-cost.svg)
+
+---
+
+![Example data with electrical demand title](data-title-peak-demand.svg)
+
+---
+
 # Example problem: linear model with two free parameters
 
  * Model is `\(y = \alpha_0 + \alpha_1 x + \epsilon\)` with `\(\epsilon \sim N(0, \sigma_{\epsilon}^2\)`
@@ -142,6 +160,20 @@ This document and associated material is on Github:
  * Forecast: for a given `\(x\)`, what is `\(p(y | x, \mathrm{data})\)` ??
 
  * `\(p(y | x, \mathrm{data}) = \int \int p(y | x, \alpha_0, \alpha_1) p(\alpha_0, \alpha_1 | \mathrm{data}) d\alpha_0 d\alpha_1\)`
+
+---
+
+There are many possible lines which could describe the data, some more plausible, some less
+
+![Example data with possible lines](data+random-lines.svg)
+
+---
+
+ * Let's set our goal to compute the posterior distribution `\(p(y | x, \mathrm{data})\)\`.
+
+ * For that, we need to average over the variables we don't know, namely `\(a_0\)` and `\(a_1\)`.
+
+ * Specifically we need to compute `\(\int p(y | x, a_0, a_1) p(a_0 | \mathrm{data}) p(a_0, a_1) da_0 da_1\)`
 
 ---
 

@@ -252,21 +252,19 @@ pp &lt;- pp/I
 
  * Under some conditions, averages over time are equal to averages over space
 
- * MCMC slower than ordinary MC due to autocorrelation, but more general
-
 ---
 
 # Markov chain Monte Carlo example
 
-Given a function `L` proportional to target distribution:
+We'll work with a function proportional to the distribution we want to sample.
+
+This is the "likelihood" function for the linear regression example.
 
 ```r
-L1 &lt;- function (x, y) {exp(-((x - 2)^2 + 2*(y - 1)^2))}
-L2 &lt;- function (x, y) {exp(-((x - 1)^2 + 0.5*(y - 2)^2))}
-L &lt;- function (x, y) {L1(x, y) + L2(x, y)}
+L &lt;- function (a.0, a.1, sigma.e) {py.given.x.a0.a1.sigma.e (data.y[1], data.x[1], a.0, a.1, sigma.e) * 
+                                   py.given.x.a0.a1.sigma.e (data.y[2], data.x[2], a.0, a.1, sigma.e) * 
+                                   py.given.x.a0.a1.sigma.e (data.y[3], data.x[3], a.0, a.1, sigma.e)}
 ```
-
----
 
 ![Function proportional to target distribution](proportional_target.svg)
 
@@ -275,23 +273,23 @@ L &lt;- function (x, y) {L1(x, y) + L2(x, y)}
 Proposal distribution which is just a Gaussian bump:
 
 ```r
-Q &lt;- function (x,y) {rnorm (2, mean=c(x, y), sd=0.1)}
+Q &lt;- function (a.0, a.1) {rnorm (2, mean=c(a.0, a.1), sd=0.05)}
 ```
 
 Generate a new proposed point:
 
 ```r
-xy1 &lt;- Q (xy0[1], xy0[2])
+p1 &lt;- Q (p0[1], p0[2])
 ```
 
 Compute acceptance ratio:
 ```r
-r &lt;- L (xy1[1], xy1[2]) / L (xy0[1], xy0[2])
+r &lt;- L (p1[1], p1[2]) / L (p0[1], p0[2])
 ```
 
 Accept or reject proposal:
 ```r
-if (r &gt; 1 || r &gt; runif(1)) {xy0 &lt;- xy1}
+if (r &gt; 1 || r &gt; runif(1)) {p0 &lt;- p1}
 ```
 
 ---
@@ -299,29 +297,47 @@ if (r &gt; 1 || r &gt; runif(1)) {xy0 &lt;- xy1}
 Generate a sequence of samples given a starting point `xy0`:
 
 ```r
-mcmc.sequence &lt;- function (n, xy0) {
-  x &lt;- vector (length=n)
-  y &lt;- vector (length=n)
-  x[1] &lt;- xy0[1]
-  y[1] &lt;- xy0[2]
+mcmc.sequence &lt;- function (n, p0) {
+  a.0 &lt;- vector (length=n)
+  a.1 &lt;- vector (length=n)
+  a.0[1] &lt;- p0[1]
+  a.1[1] &lt;- p0[2]
   for (i in 2:n) {
-    xy1 &lt;- Q (xy0[1], xy0[2])
-    r &lt;- L (xy1[1], xy1[2]) / L (xy0[1], xy0[2])
-    if (r &gt; 1 || r &gt; runif(1)) {xy0 &lt;- xy1}
-    x[i] &lt;- xy0[1]
-    y[i] &lt;- xy0[2]
+    p1 &lt;- Q (p0[1], p0[2])
+    r &lt;- L2 (p1[1], p1[2]) / L2 (p0[1], p0[2])
+    if (r &gt; 1 || r &gt; runif(1)) {p0 &lt;- p1}
+    a.0[i] &lt;- p0[1]
+    a.1[i] &lt;- p0[2]
   }
-  list (x=x, y=y)
+  list (x=a.0, y=a.1)
 }
 ```
 
 ---
 
+"Burn-in" sequence -- initial samples not representative of distribution
+
 !["Burn-in" sequence](target+initial-sequence.svg)
 
 ---
 
+Running the chain longer yields more representative samples
+
 ![Burn-in plus additional samples](target+initial+subsequent-sequence.svg)
+
+---
+
+# Posterior distribution of y given x=0.75 via Markov chain Monte Carlo
+
+![Posterior distribution of y given x=0.75 via Markov chain Monte Carlo](y-given-x-via-mcmc.svg)
+
+---
+
+# About Markov chain Monte Carlo
+
+ * MCMC slower than ordinary MC due to autocorrelation, but more general
+
+ * Writing a sampler is a distraction that obscures the model
 
 ---
 
@@ -329,7 +345,7 @@ mcmc.sequence &lt;- function (n, xy0) {
 
  * Stan has its own modeling language, primarily declarative
 
- * User states how variables are related, Stan figures out calculations
+  * User states how variables are related, Stan figures out calculations
 
  * Inference via "no U-turn sampling" MCMC
 

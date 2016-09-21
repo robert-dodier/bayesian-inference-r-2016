@@ -159,9 +159,44 @@ This document and associated material is on Github:
 
 # Computing integrals -- (2) quadrature formulas
 
- * stats::integrate adaptive subdivision based on rules exact for nested refinements of polynomials
+ * stats::integrate adaptive subdivision based on rules exact for polynomials
 
- * EXAMPLE:
+---
+
+# Linear regression example using quadrature
+
+```r
+py.given.x &lt;-
+  function (y, x) {
+    integrate (
+      function (a.1) {
+        sapply (a.1,
+                function (a.1) {
+                  integrate (function (a.0) {
+                               py.given.x.a0.a1.sigma.e (y, x, a.0, a.1, 0.25) *
+                                 P2 (a.0, a.1)}, 
+                             -Inf, Inf)$value})},
+      0, Inf)}
+```
+
+---
+
+# Calculating a posterior distribution via quadrature
+
+```r
+yy &lt;- seq (from=0.4, to=2.1, by=0.01)
+sapply (yy, function (y) {py.given.x (y, 0.75) $ value}) -&gt; pp
+I &lt;- sum(pp)*0.01
+pp &lt;- pp/I
+
+plot (x=yy, y=pp, type="l")
+```
+
+![Posterior distribution of y given 0.75 via quadrature](y-given-x-via-quadrature.svg)
+
+---
+
+# About quadrature formulas
 
  * Works well in 1 dimension, tolerable in a few more
 
@@ -173,11 +208,38 @@ This document and associated material is on Github:
 
  * runif, rnorm, rgamma, etc generate pseudorandom numbers
 
- * Approximate integral as average over samples
+ * Approximate integral as average over samples: `\(\int f(x) p(x) dx \approx \frac{1}{n} \sum_i f(x_i)\)`
 
- * EXAMPLE: 
+---
 
- * Easy to apply, very general, low computational efficiency
+# Linear regression example using simple Monte Carlo
+
+```r
+py.given.x.via.monte.carlo &lt;-
+  function (y, x) {mean (mapply (function (a.0, a.1) {py.given.x.a0.a1.sigma.e (y, x, a.0, a.1, 0.25) * L(a.0, a.1, 0.25) * psigma.e(0.25)}, rnorm (1000, mean=0, sd=1), rgamma (1000, shape=2, scale=1)))}
+```
+
+----
+
+# Calculating a posterior distribution via simple Monte Carlo
+
+```r
+pp &lt;- sapply (yy, function (y) {py.given.x.via.monte.carlo (y, 0.75)})
+I &lt;- sum(pp)*0.01
+pp &lt;- pp/I
+```
+
+![Posterior distribution of y given x=0.75 via simple Monte Carlo](y-given-x-via-monte-carlo.svg)
+
+---
+
+# About simple Monte Carlo
+
+ * Easy to apply, may be inefficient
+ 
+ * Limited applicability (difficulty of constructing sampling distribution)
+
+  * ... this is the motivation for Markov chain Monte Carlo
 
 ---
 
@@ -265,13 +327,60 @@ mcmc.sequence &lt;- function (n, xy0) {
 
 # Stan, a package for Bayesian inference
 
- * R interface rstan
+ * Stan has its own modeling language, primarily declarative
 
- * inference via "no U-turn sampling" MCMC
+ * User states how variables are related, Stan figures out calculations
 
- * other capabilities -- it's a large package
+ * Inference via "no U-turn sampling" MCMC
 
- * previous example in Stan
+ * Also implements variational inference and optimization functions
+
+---
+
+# Linear regression model in Stan
+
+```
+model {
+  real mu;
+  for (i in 1:3) {
+    mu = alpha[1] + alpha[2] * x[i];
+    y[i] ~ normal(mu, sigma_e);
+  }
+}
+
+generated quantities {
+  real y_pred;
+  y_pred = normal_rng(alpha[1] + alpha[2] * new_x, sigma_e);
+}
+```
+
+---
+
+# Making inferences via RStan
+
+```r
+library (rstan)
+stan.data &lt;- list (x=c(0.1, 0.5, 0.6), y=c(0.35, 0.9, 1.1), sigma_e=0.25, new_x=0.75)
+my.stan.model &lt;- stan (file="model.stan", data=stan.data, iter=2000, chains=4)
+
+traceplot (my.stan.model, pars = c("alpha"), inc_warmup = T)
+
+y_pred_struct &lt;- extract (my.stan.model, 'y_pred')
+y_pred &lt;- unlist (y_pred_struct, use.names=F)
+hist (y_pred, freq=F, main="Density of y|x via Stan")
+```
+
+---
+
+# Samples from the Markov chain for the parameters
+
+![Samples from the Markov chain for the parameters](stan-model-posterior-samples.svg)
+
+---
+
+# Posterior distribution of y given x=0.75
+
+![Posterior distribution of y given x=0.75](y-given-x-via-stan.svg)
 
 ---
 
@@ -287,7 +396,7 @@ mcmc.sequence &lt;- function (n, xy0) {
 
  * Instead of using a probability by itself, consider expected gain/loss
 
- * e.g. P(change service) = 0.2; what should service provider do?
+ * e.g. P(change service|data) = 0.2; what should service provider do?
 
   * answer has to depend on what service provider stands to gain or lose
 

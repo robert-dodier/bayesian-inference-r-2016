@@ -1,5 +1,5 @@
 pe <- function (e, sigma.e) {exp(-0.5*(e/sigma.e)^2)/sigma.e/sqrt(2*pi)}
-pyx <- function (y, x, a.0, a.1, sigma.e) {pe(y - (a.0 + a.1*x), sigma.e)}
+py.given.x.a0.a1.sigma.e <- function (y, x, a.0, a.1, sigma.e) {pe(y - (a.0 + a.1*x), sigma.e)}
 pa.0 <- function (a.0) {exp(-0.5*a.0^2)/sqrt(2*pi)}
 pa.1 <- function (a.1) {a.1*exp(-a.1)}
 psigma.e <- function (sigma.e) {sigma.e*exp(-sigma.e)}
@@ -7,13 +7,35 @@ psigma.e <- function (sigma.e) {sigma.e*exp(-sigma.e)}
 data.y <- c(0.35, 0.9, 1.1)
 data.x <- c(0.1, 0.5, 0.6)
 
-L <- function (a.0, a.1, sigma.e) {pyx (data.y[1], data.x[1], a.0, a.1, sigma.e) * 
-                                   pyx (data.y[2], data.x[2], a.0, a.1, sigma.e) * 
-                                   pyx (data.y[3], data.x[3], a.0, a.1, sigma.e)}
+L <- function (a.0, a.1, sigma.e) {py.given.x.a0.a1.sigma.e (data.y[1], data.x[1], a.0, a.1, sigma.e) * 
+                                   py.given.x.a0.a1.sigma.e (data.y[2], data.x[2], a.0, a.1, sigma.e) * 
+                                   py.given.x.a0.a1.sigma.e (data.y[3], data.x[3], a.0, a.1, sigma.e)}
 P <- function (a.0, a.1, sigma.e) {L(a.0, a.1, sigma.e) * pa.0(a.0) * pa.1(a.1) * psigma.e(sigma.e)}
 
 L2 <- function (a.0, a.1) {L (a.0, a.1, 0.25)}
 P2 <- function (a.0, a.1) {L(a.0, a.1, 0.25) * pa.0(a.0) * pa.1(a.1) * psigma.e(0.25)}
+
+py.given.x <-
+  function (y, x) {
+    integrate (
+      function (a.1) {
+        sapply (a.1,
+                function (a.1) {
+                  integrate (function (a.0) {
+                               py.given.x.a0.a1.sigma.e (y, x, a.0, a.1, 0.25) *
+                                 P2 (a.0, a.1)}, 
+                             -Inf, Inf)$value})},
+      0, Inf)}
+
+yy <- seq (from=0.4, to=2.1, by=0.01)
+sapply (yy, function (y) {py.given.x (y, 0.75) $ value}) -> pp
+I <- sum(pp)*0.01
+pp <- pp/I
+
+svg ("y-given-x-via-integrate.svg")
+plot (x=yy, y=pp, type="l", xlab="", ylab="")
+title (main="Density of y|x", xlab="y", ylab="density")
+dev.off ()
 
 a.0 <- seq (-1, 1, length=100)
 a.1 <- seq (0, 2, length=100)

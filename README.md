@@ -3,7 +3,7 @@ Notes and code for presentation to PDX R meetup Sept 21, 2016 on Bayesian infere
 
 Update January 2017: I've formatted the presentation as a PDF which contains all the text and graphics.
 You should be able to view this in your browser without going through the steps below.
-See: http://github.com/robert-dodier/bayesian-inference-r-2016/Introduction\_to\_Bayesian\_Inference\_in\_R.pdf
+See: [Introduction\_to\_Bayesian\_Inference\_in\_R.pdf](../blob/master/Introduction_to_Bayesian_Inference_in_R.pdf)
 
 Previous notes:
 
